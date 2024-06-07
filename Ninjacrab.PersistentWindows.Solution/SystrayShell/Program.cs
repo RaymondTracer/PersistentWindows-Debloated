@@ -75,7 +75,7 @@ namespace PersistentWindows.SystrayShell
             bool waiting_taskbar = false;
             uint hotkey = 'W'; //Alt + W
 
-            foreach (var arg in args)
+            foreach (string arg in args)
             {
                 CmdArgs += arg + " ";
 
@@ -275,7 +275,7 @@ namespace PersistentWindows.SystrayShell
 
             // default icons
             IdleIcon = legacy_icon ? Properties.Resources.pwIcon2 : Properties.Resources.pwIcon;
-            var iconHandle = Properties.Resources.pwIconBusy.GetHicon();
+            IntPtr iconHandle = Properties.Resources.pwIconBusy.GetHicon();
             BusyIcon = legacy_icon ? Properties.Resources.pwIconBusy2 : System.Drawing.Icon.FromHandle(iconHandle);
             iconHandle = Properties.Resources.pwIconUpdate.GetHicon();
             UpdateIcon = System.Drawing.Icon.FromHandle(iconHandle);
@@ -290,7 +290,7 @@ namespace PersistentWindows.SystrayShell
                 string icon_png_path = Path.Combine(iconFolder, "pwIcon.png");
                 if (File.Exists(icon_png_path))
                 {
-                    var bitmap = new System.Drawing.Bitmap(icon_png_path); // or get it from resource
+                    System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(icon_png_path); // or get it from resource
                     IdleIcon = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
                 }
                 else if (File.Exists(icon_path))
@@ -302,7 +302,7 @@ namespace PersistentWindows.SystrayShell
                 icon_png_path = Path.Combine(iconFolder, "pwIconBusy.png");
                 if (File.Exists(icon_png_path))
                 {
-                    var bitmap = new System.Drawing.Bitmap(icon_png_path);
+                    System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(icon_png_path);
                     BusyIcon = System.Drawing.Icon.FromHandle(bitmap.GetHicon());
                 }
                 else if (File.Exists(icon_path))
@@ -348,9 +348,6 @@ namespace PersistentWindows.SystrayShell
             pwp.launchOncePerProcessId = launch_once_per_process_id;
             if (ignore_process.Length > 0)
                 pwp.SetIgnoreProcess(ignore_process);
-
-            if (hotkey_window)
-                HotKeyForm.Start(hotkey);
 
             if (!pwp.Start(auto_restore_from_db_at_startup))
             {
@@ -544,7 +541,7 @@ namespace PersistentWindows.SystrayShell
 
         static void StartSplashForm()
         {
-            var thread = new Thread(() =>
+            Thread thread = new Thread(() =>
             {
                 Application.Run(new SplashForm());
             });
@@ -556,7 +553,7 @@ namespace PersistentWindows.SystrayShell
 
         static public char EnterSnapshotName()
         {
-            var profileDlg = new LayoutProfile();
+            LayoutProfile profileDlg = new LayoutProfile();
             profileDlg.Icon = IdleIcon;
             profileDlg.ShowDialog(systrayForm);
 
@@ -565,7 +562,7 @@ namespace PersistentWindows.SystrayShell
 
         static public string EnterDbEntryName()
         {
-            var dlg = new NameDbEntry();
+            NameDbEntry dlg = new NameDbEntry();
             dlg.Icon = IdleIcon;
             dlg.ShowDialog(systrayForm);
 
@@ -591,7 +588,7 @@ namespace PersistentWindows.SystrayShell
             pwp.dbDisplayKey = pwp.GetDisplayKey();
             if ((User32.GetKeyState(0x11) & 0x8000) != 0) //ctrl key pressed
             {
-                var name = EnterDbEntryName();
+                string name = EnterDbEntryName();
                 if (String.IsNullOrEmpty(name))
                     return;
                 pwp.dbDisplayKey += name;
@@ -606,16 +603,16 @@ namespace PersistentWindows.SystrayShell
             bool shift_key_pressed = (User32.GetKeyState(0x10) & 0x8000) != 0;
             if (ask_dialog || (shift_key_pressed && !ctrl_key_pressed))
             {
-                var listCollection = pwp.GetDbCollections();
-                var dlg = new DbKeySelect();
-                foreach (var collection in listCollection)
+                System.Collections.Generic.List<string> listCollection = pwp.GetDbCollections();
+                DbKeySelect dlg = new DbKeySelect();
+                foreach (string collection in listCollection)
                 {
                     dlg.InsertCollection(collection);
                 }
                 //dlg.InsertCollection(new string('a', 256));
                 dlg.Icon = IdleIcon;
                 dlg.ShowDialog(systrayForm);
-                var result = dlg.result;
+                string result = dlg.result;
                 if (String.IsNullOrEmpty(result))
                     return;
 
@@ -630,7 +627,7 @@ namespace PersistentWindows.SystrayShell
                         pwp.autoInitialRestoreFromDB = true;
                     else
                     {
-                        var name = EnterDbEntryName();
+                        string name = EnterDbEntryName();
                         if (String.IsNullOrEmpty(name))
                             return;
 
@@ -680,7 +677,7 @@ namespace PersistentWindows.SystrayShell
         {
             Process process = new Process();
 
-            var os_version = Environment.OSVersion;
+            OperatingSystem os_version = Environment.OSVersion;
             if (os_version.Version.Major < 10)
             {
                 process.StartInfo.FileName = "wmic.exe";

@@ -29,7 +29,7 @@ namespace PersistentWindows.Common.Diagnostics
             if (silent)
                 return;
 #if DEBUG
-            var message = Format(format, args);
+            string message = Format(format, args);
             Console.Write(message);
 #endif
         }
@@ -39,7 +39,7 @@ namespace PersistentWindows.Common.Diagnostics
             if (silent)
                 return;
 #if DEBUG
-            var message = Format(format, args);
+            string message = Format(format, args);
             Console.Write(message);
 #endif
         }
@@ -49,7 +49,7 @@ namespace PersistentWindows.Common.Diagnostics
             if (silent)
                 return;
 
-            var message = Format(format, args);
+            string message = Format(format, args);
             if (message.Contains("Cannot create a file when that file already exists"))
             {
                 // ignore trivial error
@@ -74,7 +74,7 @@ namespace PersistentWindows.Common.Diagnostics
             if (silent)
                 return;
 
-            var message = Format(format, args);
+            string message = Format(format, args);
 #if DEBUG
             Console.Write(message);
 #endif

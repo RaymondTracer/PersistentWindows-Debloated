@@ -17,7 +17,7 @@ namespace PersistentWindows.Common
 
         private void ProfileName_TextChanged(object sender, EventArgs e)
         {
-            var str = ((TextBox)sender).Text;
+            string str = ((TextBox)sender).Text;
             snapshot_name = Char.ToLower(str[0]); 
             Close();
         }

@@ -42,7 +42,7 @@ namespace PersistentWindows.Common
             {
                 window_title.Top = label2.Top - 5;
                 int rows = window_title.PreferredWidth / this.Width + 1;
-                var resize = new Size(this.Width,
+                Size resize = new Size(this.Width,
                     //window_title.PreferredHeight * (window_title.PreferredWidth / this.Width));
                     window_title.PreferredHeight * rows);
                 window_title.AutoSize = false;
@@ -62,7 +62,7 @@ namespace PersistentWindows.Common
 
         private void Button_Click(object sender, EventArgs e)
         {
-            var button = (Button)sender;
+            Button button = (Button)sender;
             buttonName = button.Name;
             Close();
         }

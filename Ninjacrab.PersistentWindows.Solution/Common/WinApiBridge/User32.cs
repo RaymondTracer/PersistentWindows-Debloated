@@ -534,7 +534,7 @@ namespace PersistentWindows.Common.WinApiBridge
         public static int SetThreadDpiAwarenessContextSafe(int dpi_awareness_cxt = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
         {
             //valid API since win10 1607
-            var os_version = Environment.OSVersion;
+            OperatingSystem os_version = Environment.OSVersion;
             if (os_version.Version.Major < 10)
                 return 0;
 

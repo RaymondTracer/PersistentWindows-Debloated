@@ -42,9 +42,9 @@ namespace PersistentWindows.Common.Minimize2Tray
 
         private static string GetWindowText(IntPtr hWnd)
         {
-            var builder = new StringBuilder(User32.GetWindowTextLength(hWnd) + 1);
+            StringBuilder builder = new StringBuilder(User32.GetWindowTextLength(hWnd) + 1);
             User32.GetWindowText(hWnd, builder, builder.Capacity);
-            var windowText = builder.ToString();
+            string windowText = builder.ToString();
             return windowText;
         }
 
@@ -80,7 +80,7 @@ namespace PersistentWindows.Common.Minimize2Tray
         }
         private NotifyIcon CreateNotifyIcon()
         {
-            var icon = new NotifyIcon();
+            NotifyIcon icon = new NotifyIcon();
             //icon.ContextMenuStrip = contextMenuStrip;
             icon.MouseClick += SystemTrayIconClick;
             return icon;
@@ -90,7 +90,7 @@ namespace PersistentWindows.Common.Minimize2Tray
             IntPtr icon;
             try
             {
-                User32.SendMessageTimeout(hWnd, User32.WM_GETICON, User32.ICON_SMALL2, 0, User32.SMTO_ABORTIFHUNG, 100, out var result);
+                User32.SendMessageTimeout(hWnd, User32.WM_GETICON, User32.ICON_SMALL2, 0, User32.SMTO_ABORTIFHUNG, 100, out uint result);
                 icon = new IntPtr(result);
 
                 if (icon == IntPtr.Zero)

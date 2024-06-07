@@ -218,7 +218,7 @@ namespace PersistentWindows.SystrayShell
         {
             ServicePointManager.Expect100Continue = true;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            var cli = new WebClient();
+            WebClient cli = new WebClient();
             string data = cli.DownloadString($"{Program.ProjectUrl}/releases");
 
             string latest_pattern = "releases/latest";
@@ -245,10 +245,10 @@ namespace PersistentWindows.SystrayShell
 
                 if (!upgradeDownloaded.ContainsKey(latestVersion))
                 {
-                    var src_file = $"{Program.ProjectUrl}/releases/download/{latestVersion}/{System.Windows.Forms.Application.ProductName}{latestVersion}.zip";
-                    var dst_file = $"{Program.AppdataFolder}/upgrade.zip";
-                    var dst_dir = Path.Combine($"{Program.AppdataFolder}", "upgrade");
-                    var install_dir = Application.StartupPath;
+                    string src_file = $"{Program.ProjectUrl}/releases/download/{latestVersion}/{System.Windows.Forms.Application.ProductName}{latestVersion}.zip";
+                    string dst_file = $"{Program.AppdataFolder}/upgrade.zip";
+                    string dst_dir = Path.Combine($"{Program.AppdataFolder}", "upgrade");
+                    string install_dir = Application.StartupPath;
 
                     {
                         cli.DownloadFile(src_file, dst_file);
@@ -341,11 +341,6 @@ namespace PersistentWindows.SystrayShell
             }
         }
 
-        private void WebCommander(object sender, EventArgs e)
-        {
-            HotKeyForm.InvokeFromMenu();
-        }
-
         private void ToggleIcon(object sender, EventArgs e)
         {
             if (toggleIcon)
@@ -371,7 +366,7 @@ namespace PersistentWindows.SystrayShell
                             return;
                         if (filePath.EndsWith(".png"))
                         {
-                            var bitmap = new Bitmap(filePath); // or get it from resource
+                            Bitmap bitmap = new Bitmap(filePath); // or get it from resource
                             notifyIconMain.Icon = Icon.FromHandle(bitmap.GetHicon());
                         }
                         else
@@ -440,7 +435,7 @@ namespace PersistentWindows.SystrayShell
             if (e.Button == MouseButtons.Left)
             {
                 DateTime now = DateTime.Now;
-                var ms = now.Subtract(clickTime).TotalMilliseconds;
+                double ms = now.Subtract(clickTime).TotalMilliseconds;
                 Console.WriteLine("{0}", ms);
                 if (ms < 30 || ms > SystemInformation.DoubleClickTime / 2)
                 {

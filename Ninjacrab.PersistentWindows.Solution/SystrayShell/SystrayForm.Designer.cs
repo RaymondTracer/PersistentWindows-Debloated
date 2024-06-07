@@ -23,7 +23,6 @@ namespace PersistentWindows.SystrayShell
         private ToolStripMenuItem restoreSnapshotMenuItem;
         private ToolStripMenuItem pauseResumeToolStripMenuItem;
         public  ToolStripMenuItem toggleIconMenuItem;
-        public  ToolStripMenuItem invokeWebCommander;
         public  ToolStripMenuItem upgradeNoticeMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
         private ToolStripMenuItem exitToolStripMenuItem;
@@ -61,7 +60,6 @@ namespace PersistentWindows.SystrayShell
             this.restoreSnapshotMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pauseResumeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toggleIconMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.invokeWebCommander = new System.Windows.Forms.ToolStripMenuItem();
             this.upgradeNoticeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 
             for (int i = 0; i < menuSeparators.Length; ++i)
@@ -107,7 +105,6 @@ namespace PersistentWindows.SystrayShell
                 this.menuSeparators[1],
                 this.pauseResumeToolStripMenuItem,
                 this.toggleIconMenuItem,
-                this.invokeWebCommander,
                 this.menuSeparators[2],
                 this.upgradeNoticeMenuItem,
                 this.aboutToolStripMenuItem,
@@ -151,13 +148,6 @@ namespace PersistentWindows.SystrayShell
             this.toggleIconMenuItem.Name = "toggle icon";
             this.toggleIconMenuItem.Text = "Try customized icon";
             this.toggleIconMenuItem.Click += new System.EventHandler(this.ToggleIcon);
-
-            // web commander
-            this.invokeWebCommander.Name = "web commander";
-            this.invokeWebCommander.Text = "Toggle webpage commander";
-            this.invokeWebCommander.Click += new System.EventHandler(this.WebCommander);
-            if (!Program.hotkey_window)
-                this.invokeWebCommander.Enabled = false;
             // 
             // aboutToolStripMenuItem
             // 

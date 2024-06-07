@@ -10,7 +10,7 @@ namespace PersistentWindows.Common.Models
 
         public void AcquireMetrics()
         {
-            var displays = Display.GetDisplays();
+            List<Display> displays = Display.GetDisplays();
 
             displays.Sort(delegate (Display dp1, Display dp2)
                 {
@@ -34,7 +34,7 @@ namespace PersistentWindows.Common.Models
                 }
             );
 
-            foreach (var display in displays)
+            foreach (Display display in displays)
             {
                 monitorResolutions.Add(display);
             }
@@ -49,7 +49,7 @@ namespace PersistentWindows.Common.Models
         private string BuildKey()
         {
             List<string> keySegments = new List<string>();
-            foreach (var entry in monitorResolutions)
+            foreach (Display entry in monitorResolutions)
             {
                 keySegments.Add(string.Format("{0}_Loc{1}x{2}_Res{3}x{4}", entry.DeviceName, entry.Position.Left, entry.Position.Top, entry.Position.Width, entry.Position.Height));
             }

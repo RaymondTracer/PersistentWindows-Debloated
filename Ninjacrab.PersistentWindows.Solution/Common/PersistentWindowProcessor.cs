@@ -228,7 +228,7 @@ namespace PersistentWindows.Common
         {
             RegistryKey top = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Configuration", true);
             string[] configs = top.GetSubKeyNames();
-            foreach (var config_name in configs)
+            foreach (string config_name in configs)
             {
                 RegistryKey config = top.OpenSubKey(config_name);
                 string[] displays = config.GetSubKeyNames();
@@ -258,7 +258,7 @@ namespace PersistentWindows.Common
             //appDataFolder = ".";
             appDataFolder = AppDomain.CurrentDomain.BaseDirectory;
 #endif
-            var dir = Directory.CreateDirectory(appDataFolder);
+            DirectoryInfo dir = Directory.CreateDirectory(appDataFolder);
 
             try
             {
@@ -279,14 +279,14 @@ namespace PersistentWindows.Common
                 return false;
             }
 
-            var db_version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string db_version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             persistDbName = $@"{appDataFolder}/{productName}.{db_version}.db";
             bool found_latest_db_file_version = false;
             if (File.Exists(persistDbName))
                 found_latest_db_file_version = true;
-            foreach (var file in dir.EnumerateFiles($@"{productName}*.db"))
+            foreach (FileInfo file in dir.EnumerateFiles($@"{productName}*.db"))
             {
-                var fname = file.Name;
+                string fname = file.Name;
                 if (found_latest_db_file_version && !fname.Contains(db_version))
                 {
                     // remove outdated db files
@@ -315,7 +315,7 @@ namespace PersistentWindows.Common
 #if DEBUG
             //TestSetWindowPos();
 
-            var debugTimer = new Timer(state =>
+            Timer debugTimer = new Timer(state =>
             {
                 DebugInterval();
             });
@@ -378,30 +378,6 @@ namespace PersistentWindows.Common
                         return;
 
                     ActivateWindow(hwnd); //window could be active on alt-tab
-                    if (IsFullScreen(hwnd) || IsRdpWindow(hwnd))
-                    {
-                        if (User32.IsWindowVisible(HotKeyWindow.commanderWnd))
-                        {
-                            RECT hkwinPos = new RECT();
-                            User32.GetWindowRect(HotKeyWindow.commanderWnd, ref hkwinPos);
-
-                            RECT fgwinPos = new RECT();
-                            User32.GetWindowRect(hwnd, ref fgwinPos);
-
-                            RECT intersect = new RECT();
-                            bool overlap = User32.IntersectRect(out intersect, ref hkwinPos, ref fgwinPos);
-                            if (overlap)
-                            {
-                                restoreHotkeyWindow = true;
-                                User32.ShowWindow(HotKeyWindow.commanderWnd, (int)ShowWindowCommands.Hide);
-                            }
-                        }
-                    }
-                    else if (restoreHotkeyWindow)
-                    {
-                        restoreHotkeyWindow = false;
-                        User32.ShowWindow(HotKeyWindow.commanderWnd, (int)ShowWindowCommands.Show);
-                    }
 
                     if (!alt_key_pressed)
                     {
@@ -436,7 +412,7 @@ namespace PersistentWindows.Common
                 if (fullScreenGamingWindows.Contains(foreGroundWindow))
                     return;
 
-                foreach (var hwnd in fullScreenGamingWindows)
+                foreach (IntPtr hwnd in fullScreenGamingWindows)
                 {
                     if (IsFullScreen(hwnd))
                         return;
@@ -529,7 +505,7 @@ namespace PersistentWindows.Common
                 try
                 {
                     lock(dbLock)
-                    using (var persistDB = new LiteDatabase(persistDbName))
+                    using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
                     {
                         db_exist = persistDB.CollectionExists(curDisplayKey);
                     }
@@ -625,8 +601,8 @@ namespace PersistentWindows.Common
                     // undo disqualified capture time
                     if (lastUserActionTime.ContainsKey(curDisplayKey))
                     {
-                        var lastCaptureTime = lastUserActionTime[curDisplayKey];
-                        var diff = lastDisplayChangeTime - lastCaptureTime;
+                        DateTime lastCaptureTime = lastUserActionTime[curDisplayKey];
+                        TimeSpan diff = lastDisplayChangeTime - lastCaptureTime;
                         if (diff.TotalMilliseconds < CaptureLatency)
                         {
                             if (lastUserActionTimeBackup.ContainsKey(curDisplayKey))
@@ -791,13 +767,13 @@ namespace PersistentWindows.Common
             initialized = true;
             remoteSession = System.Windows.Forms.SystemInformation.TerminalServerSession;
             Log.Event($"Display config is {curDisplayKey}");
-            using (var persistDB = new LiteDatabase(persistDbName))
+            using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
             {
                 bool db_exist = persistDB.CollectionExists(curDisplayKey);
                 enableRestoreMenu(db_exist, true);
                 normalSessions.Add(curDisplayKey);
-                var collectionNames = persistDB.GetCollectionNames();
-                foreach (var item in collectionNames)
+                IEnumerable<string> collectionNames = persistDB.GetCollectionNames();
+                foreach (string item in collectionNames)
                 {
                     normalSessions.Add(item);
                 }
@@ -822,11 +798,11 @@ namespace PersistentWindows.Common
 
         public List<String> GetDbCollections()
         {
-            using (var persistDB = new LiteDatabase(persistDbName))
+            using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
             {
-                var collectionNames = persistDB.GetCollectionNames();
-                var lst = new List<String>();
-                foreach (var item in collectionNames)
+                IEnumerable<string> collectionNames = persistDB.GetCollectionNames();
+                List<string> lst = new List<String>();
+                foreach (string item in collectionNames)
                 {
                     lst.Add(item);
                 }
@@ -841,9 +817,9 @@ namespace PersistentWindows.Common
         public void SetIgnoreProcess(string ignore_process)
         {
             string[] ps = ignore_process.Split(';');
-            foreach (var p in ps)
+            foreach (string p in ps)
             {
-                var s = p;
+                string s = p;
                 if (s.EndsWith(".exe"))
                     s = s.Substring(0, s.Length - 4);
                 ignoreProcess.Add(s);
@@ -853,9 +829,9 @@ namespace PersistentWindows.Common
         public void SetDebugProcess(string debug_process)
         {
             string[] ps = debug_process.Split(';');
-            foreach (var p in ps)
+            foreach (string p in ps)
             {
-                var s = p;
+                string s = p;
                 if (s.EndsWith(".exe"))
                     s = s.Substring(0, s.Length - 4);
                 debugProcess.Add(s);
@@ -888,7 +864,7 @@ namespace PersistentWindows.Common
             if (noRestoreWindows.Contains(hwnd))
                 return false;
 
-            foreach (var key in monitorApplications.Keys)
+            foreach (string key in monitorApplications.Keys)
             {
                 if (monitorApplications[key].ContainsKey(hwnd))
                     return false;
@@ -912,7 +888,7 @@ namespace PersistentWindows.Common
                 if (!isFullScreen)
                 {
                     List<Display> displays = GetDisplays();
-                    foreach (var display in displays)
+                    foreach (Display display in displays)
                     {
                         RECT screen = display.Position;
                         RECT intersect = new RECT();
@@ -937,13 +913,13 @@ namespace PersistentWindows.Common
             if (use_cache && windowTitle.ContainsKey(hwnd))
                 return windowTitle[hwnd];
 
-            var length = User32.GetWindowTextLength(hwnd);
+            int length = User32.GetWindowTextLength(hwnd);
             if (length > 0)
             {
                 length++;
-                var title = new StringBuilder(length);
+                StringBuilder title = new StringBuilder(length);
                 User32.GetWindowText(hwnd, title, length);
-                var t = title.ToString();
+                string t = title.ToString();
                 t = t.Trim();
                 return t;
             }
@@ -1014,7 +990,7 @@ namespace PersistentWindows.Common
         {
             if (deadApps.ContainsKey(curDisplayKey))
             {
-                var deadAppPos = deadApps[curDisplayKey];
+                List<DeadAppPosition> deadAppPos = deadApps[curDisplayKey];
                 string className = GetWindowClassName(hwnd);
                 if (!string.IsNullOrEmpty(className))
                 {
@@ -1023,7 +999,7 @@ namespace PersistentWindows.Common
                     string procPath = GetProcExePath(processId);
                     string title = GetWindowTitle(hwnd);
                     int idx = deadAppPos.Count;
-                    foreach (var appPos in deadAppPos.Reverse<DeadAppPosition>())
+                    foreach (DeadAppPosition appPos in deadAppPos.Reverse<DeadAppPosition>())
                     {
                         --idx;
 
@@ -1050,7 +1026,7 @@ namespace PersistentWindows.Common
 
         private void FixOffScreenWindow(IntPtr hwnd)
         {
-            var displayKey = GetDisplayKey();
+            string displayKey = GetDisplayKey();
             if (!normalSessions.Contains(displayKey))
             {
                 Log.Error("Avoid recover invisible window \"{0}\"", GetWindowTitle(hwnd));
@@ -1135,15 +1111,6 @@ namespace PersistentWindows.Common
         //return true if action is taken
         private void ActivateWindow(IntPtr hwnd)
         {
-            if (IsBrowserWindow(hwnd))
-            {
-                IntPtr topHwnd = User32.GetAncestor(hwnd, User32.GetAncestorRoot);
-                if (hwnd == topHwnd)
-                    HotKeyWindow.BrowserActivate(topHwnd);
-            }
-            else
-               HotKeyWindow.BrowserActivate(hwnd, false);
-
             try
             {
                 bool enable_offscreen_fix = enableOffScreenFix;
@@ -1169,7 +1136,7 @@ namespace PersistentWindows.Common
                             return;
 
                         bool isNewWindow = true;
-                        foreach (var key in monitorApplications.Keys)
+                        foreach (string key in monitorApplications.Keys)
                         {
                             if (monitorApplications[key].ContainsKey(hwnd))
                             {
@@ -1193,7 +1160,7 @@ namespace PersistentWindows.Common
 
                     // unminimize to previous location
                     ApplicationDisplayMetrics prevDisplayMetrics = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>();
-                    var diff = prevDisplayMetrics.CaptureTime.Subtract(lastUnminimizeTime);
+                    TimeSpan diff = prevDisplayMetrics.CaptureTime.Subtract(lastUnminimizeTime);
                     if (diff.TotalMilliseconds > 0 && diff.TotalMilliseconds < 400)
                     {
                         //discard fast capture of unminimize action
@@ -1201,7 +1168,7 @@ namespace PersistentWindows.Common
                         if (last_elem_idx == 0)
                             return;
                         monitorApplications[curDisplayKey][hwnd].RemoveAt(last_elem_idx);
-                        var lastMetrics = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>();
+                        ApplicationDisplayMetrics lastMetrics = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>();
                         if (!lastMetrics.IsFullScreen)
                         {
                             monitorApplications[curDisplayKey][hwnd].Add(prevDisplayMetrics);
@@ -1253,7 +1220,7 @@ namespace PersistentWindows.Common
                                     }
 
                                     // windows ignores previous snap status when activated from minimized state
-                                    var placement = prevDisplayMetrics.WindowPlacement;
+                                    WindowPlacement placement = prevDisplayMetrics.WindowPlacement;
                                     if (placement.ShowCmd == ShowWindowCommands.Maximize)
                                     {
                                         //restore normal first
@@ -1306,7 +1273,7 @@ namespace PersistentWindows.Common
             if (!windowProcessName.ContainsKey(hwnd))
             {
                 string processName;
-                var process = GetProcess(hwnd);
+                Process process = GetProcess(hwnd);
                 if (process == null)
                 {
                     windowProcessName.Add(hwnd, "unrecognized_process");
@@ -1382,7 +1349,7 @@ namespace PersistentWindows.Common
                 windowTitle.Remove(hwnd);
                 dualPosSwitchWindows.Remove(hwnd);
 
-                foreach (var key in monitorApplications.Keys)
+                foreach (string key in monitorApplications.Keys)
                 {
                     if (!monitorApplications[key].ContainsKey(hwnd))
                         continue;
@@ -1394,8 +1361,8 @@ namespace PersistentWindows.Common
                         {
                             deadApps.Add(key, new List<DeadAppPosition>());
                         }
-                        var appPos = new DeadAppPosition();
-                        var lastMetric = monitorApplications[key][hwnd].Last();
+                        DeadAppPosition appPos = new DeadAppPosition();
+                        ApplicationDisplayMetrics lastMetric = monitorApplications[key][hwnd].Last();
                         appPos.ClassName = lastMetric.ClassName;
                         appPos.Title = lastMetric.Title;
                         appPos.ScreenPosition = lastMetric.ScreenPosition;
@@ -1434,7 +1401,7 @@ namespace PersistentWindows.Common
             */
 
             // auto track taskbar
-            var title = GetWindowTitle(hwnd);
+            string title = GetWindowTitle(hwnd);
             if (string.IsNullOrEmpty(title) && !IsTaskBar(hwnd))
             {
                 return;
@@ -1486,7 +1453,7 @@ namespace PersistentWindows.Common
 
                     RECT screenPosition = new RECT();
                     User32.GetWindowRect(hwnd, ref screenPosition);
-                    var process = GetProcess(hwnd);
+                    Process process = GetProcess(hwnd);
                     string log = string.Format("Received message of process {0} at ({1}, {2}) of size {3} x {4} with title: {5}",
                         (process == null) ? "" : process.ProcessName,
                         screenPosition.Left,
@@ -1535,7 +1502,7 @@ namespace PersistentWindows.Common
                     {
                         case User32Events.EVENT_SYSTEM_FOREGROUND:
                             {
-                                var cur_vdi = VirtualDesktop.GetWindowDesktopId(hwnd);
+                            Guid cur_vdi = VirtualDesktop.GetWindowDesktopId(hwnd);
                                 if (cur_vdi != Guid.Empty)
                                     curVirtualDesktop = cur_vdi;
 
@@ -1637,7 +1604,7 @@ namespace PersistentWindows.Common
                         case User32Events.EVENT_SYSTEM_MINIMIZESTART:
                             {
                                 DateTime now = DateTime.Now;
-                                var diff = now.Subtract(lastUnminimizeTime);
+                            TimeSpan diff = now.Subtract(lastUnminimizeTime);
                                 if (diff.TotalMilliseconds < 200)
                                 {
                                     Log.Error($"window \"{title}\" is hidden by tidytab");
@@ -1705,7 +1672,7 @@ namespace PersistentWindows.Common
 
             if (monitorApplications.ContainsKey(curDisplayKey))
             {
-                foreach (var hwnd in monitorApplications[curDisplayKey].Keys)
+                foreach (IntPtr hwnd in monitorApplications[curDisplayKey].Keys)
                 {
                     for (int i = monitorApplications[curDisplayKey][hwnd].Count - 1; i >= 0; --i)
                     {
@@ -1734,12 +1701,12 @@ namespace PersistentWindows.Common
             {
                 CaptureApplicationsOnCurrentDisplays(curDisplayKey, immediateCapture: true);
 
-                foreach (var hwnd in monitorApplications[curDisplayKey].Keys)
+                foreach (IntPtr hwnd in monitorApplications[curDisplayKey].Keys)
                 {
                     int count = monitorApplications[curDisplayKey][hwnd].Count;
                     if (count > 0)
                     {
-                        for (var i = 0; i < count - 1; ++i)
+                        for (int i = 0; i < count - 1; ++i)
                             monitorApplications[curDisplayKey][hwnd][i].SnapShotFlags &= ~(1ul << snapshotId);
                         monitorApplications[curDisplayKey][hwnd][count - 1].SnapShotFlags |= (1ul << snapshotId);
                         monitorApplications[curDisplayKey][hwnd][count - 1].IsValid = true;
@@ -1749,7 +1716,7 @@ namespace PersistentWindows.Common
                 if (!snapshotTakenTime.ContainsKey(curDisplayKey))
                     snapshotTakenTime[curDisplayKey] = new Dictionary<int, DateTime>();
 
-                var now = DateTime.Now;
+                DateTime now = DateTime.Now;
                 snapshotTakenTime[curDisplayKey][snapshotId] = now;
                 Log.Event("Snapshot {0} is captured", snapshotId);
             }
@@ -1859,9 +1826,6 @@ namespace PersistentWindows.Common
         // workaround by put these windows behind HWND_NOTOPMOST
         private bool FixTopMostWindow(IntPtr hWnd)
         {
-            if (hWnd == HotKeyWindow.commanderWnd)
-                return false;
-
             if (!IsWindowTopMost(hWnd))
                 return false;
 
@@ -1894,7 +1858,7 @@ namespace PersistentWindows.Common
         {
             try
             {
-                foreach (var hwnd in topmostWindowsFixed)
+                foreach (IntPtr hwnd in topmostWindowsFixed)
                 {
                     FixTopMostWindow(hwnd);
                 }
@@ -1976,7 +1940,7 @@ namespace PersistentWindows.Common
                 return;
 
             int prevIndex = monitorApplications[curDisplayKey][hwnd].Count - 1;
-            var cur_metrics = monitorApplications[curDisplayKey][hwnd][prevIndex];
+            ApplicationDisplayMetrics cur_metrics = monitorApplications[curDisplayKey][hwnd][prevIndex];
             if (cur_metrics.IsMinimized)
                 return;
 
@@ -1988,7 +1952,7 @@ namespace PersistentWindows.Common
 
             for (; prevIndex >= 0; --prevIndex)
             {
-                var metrics = monitorApplications[curDisplayKey][hwnd][prevIndex];
+                ApplicationDisplayMetrics metrics = monitorApplications[curDisplayKey][hwnd][prevIndex];
                 if (!metrics.IsValid)
                 {
                     continue;
@@ -2239,7 +2203,7 @@ namespace PersistentWindows.Common
             try
             {
                 // validate captured entry
-                foreach (var hwnd in monitorApplications[displayKey].Keys)
+                foreach (IntPtr hwnd in monitorApplications[displayKey].Keys)
                 {
                     if (monitorApplications[displayKey][hwnd].Count > 0)
                         monitorApplications[displayKey][hwnd].Last().IsValid = true;
@@ -2263,7 +2227,7 @@ namespace PersistentWindows.Common
                 return null;
             if (!monitorApplications[curDisplayKey].ContainsKey(hwnd))
                 return null;
-            var dm = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>();
+            ApplicationDisplayMetrics dm = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>();
             if (dm != null && dm.IsValid)
                 return dm;
             return null;
@@ -2281,23 +2245,23 @@ namespace PersistentWindows.Common
 
             if (saveToDB)
             {
-                using (var persistDB = new LiteDatabase(persistDbName))
+                using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
                 {
-                    var ids = new HashSet<int>(); //db entries that need update
-                    foreach (var hwnd in monitorApplications[displayKey].Keys)
+                    HashSet<int> ids = new HashSet<int>(); //db entries that need update
+                    foreach (IntPtr hwnd in monitorApplications[displayKey].Keys)
                     {
-                        var displayMetrics = monitorApplications[displayKey][hwnd].Last<ApplicationDisplayMetrics>();
+                        ApplicationDisplayMetrics displayMetrics = monitorApplications[displayKey][hwnd].Last<ApplicationDisplayMetrics>();
                         if (displayKey == dbDisplayKey && displayMetrics.Id > 0)
                             ids.Add(displayMetrics.Id);
                     }
 
-                    var db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
+                    ILiteCollection<ApplicationDisplayMetrics> db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
                     if (db.Count() > 0)
                         db.DeleteMany(_ => !ids.Contains(_.Id)); //remove invalid entries (destroyed window since last capture to db)
                                                                  //db.DeleteAll();
 
-                    var appWindows = CaptureWindowsOfInterest();
-                    foreach (var hWnd in appWindows)
+                    IEnumerable<IntPtr> appWindows = CaptureWindowsOfInterest();
+                    foreach (IntPtr hWnd in appWindows)
                     {
                         if (!monitorApplications[displayKey].ContainsKey(hWnd))
                             continue;
@@ -2306,7 +2270,7 @@ namespace PersistentWindows.Common
 
                         try
                         {
-                            var curDisplayMetrics = monitorApplications[displayKey][hWnd].Last<ApplicationDisplayMetrics>();
+                            ApplicationDisplayMetrics curDisplayMetrics = monitorApplications[displayKey][hWnd].Last<ApplicationDisplayMetrics>();
                             windowTitle[hWnd] = curDisplayMetrics.Title;
 
                             if (processCmd.ContainsKey(curDisplayMetrics.ProcessId))
@@ -2357,11 +2321,11 @@ namespace PersistentWindows.Common
             }
             else lock(restoreLock)
             {
-                var appWindows = CaptureWindowsOfInterest();
+                    IEnumerable<IntPtr> appWindows = CaptureWindowsOfInterest();
                 DateTime now = DateTime.Now;
                 int movedWindows = 0;
 
-                foreach (var hwnd in appWindows)
+                foreach (IntPtr hwnd in appWindows)
                 {
                     try
                     {
@@ -2446,7 +2410,7 @@ namespace PersistentWindows.Common
                 result.Add(hwnd);
             }
 
-            foreach (var hwnd in allUserMoveWindows)
+            foreach (IntPtr hwnd in allUserMoveWindows)
             {
                 if (noRestoreWindows.Contains(hwnd))
                     continue;
@@ -2602,7 +2566,7 @@ namespace PersistentWindows.Common
                 {
                     for (; prevIndex >= 0; --prevIndex)
                     {
-                        var metrics = monitorApplications[displayKey][hwnd][prevIndex];
+                        ApplicationDisplayMetrics metrics = monitorApplications[displayKey][hwnd][prevIndex];
                         if (!metrics.IsValid)
                         {
                             Log.Error("invalid capture data {0}", GetWindowTitle(hwnd));
@@ -2943,7 +2907,7 @@ namespace PersistentWindows.Common
         private void RestoreSnapWindow(IntPtr hwnd, RECT target_pos)
         {
             List<Display> displays = GetDisplays();
-            foreach (var display in displays)
+            foreach (Display display in displays)
             {
                 RECT screen = display.Position;
                 RECT intersect = new RECT();
@@ -3085,7 +3049,7 @@ namespace PersistentWindows.Common
             List<Display> displays = GetDisplays();
             bool top_edge = false;
             bool left_edge = false;
-            foreach (var display in displays)
+            foreach (Display display in displays)
             {
                 RECT screen = display.Position;
                 if (User32.IntersectRect(out intersect, ref sourceRect, ref screen))
@@ -3207,7 +3171,7 @@ namespace PersistentWindows.Common
             DateTime lastCaptureTime = time;
 
             IEnumerable<IntPtr> sWindows;
-            var arr = new IntPtr[1];
+            IntPtr[] arr = new IntPtr[1];
             if (sWindow != IntPtr.Zero)
             {
                 arr[0] = sWindow;
@@ -3243,7 +3207,7 @@ namespace PersistentWindows.Common
             {
                 ApplicationDisplayMetrics choice = null;
                 int best_delta = Int32.MaxValue;
-                foreach (var result in results)
+                foreach (ApplicationDisplayMetrics result in results)
                 {
                     if (dbMatchWindow.Contains(result.Id))
                         continue; //id already matched (to another window) 
@@ -3270,10 +3234,10 @@ namespace PersistentWindows.Common
             }
 
             DateTime printRestoreTime = lastCaptureTime;
-            if (restoringFromDB) using (var persistDB = new LiteDatabase(persistDbName))
+            if (restoringFromDB) using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
             {
-                var db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
-                for (int dbMatchLevel = 0; dbMatchLevel < 4; ++dbMatchLevel) foreach (var hWnd in sWindows)
+                    ILiteCollection<ApplicationDisplayMetrics> db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
+                for (int dbMatchLevel = 0; dbMatchLevel < 4; ++dbMatchLevel) foreach (IntPtr hWnd in sWindows)
                 {
                     if (windowMatchDb.Contains(hWnd))
                         continue;
@@ -3294,8 +3258,8 @@ namespace PersistentWindows.Common
                     ApplicationDisplayMetrics curDisplayMetrics = null;
                     ApplicationDisplayMetrics oldDisplayMetrics = monitorApplications[displayKey][hWnd].Last<ApplicationDisplayMetrics>();
 
-                    var processName = oldDisplayMetrics.ProcessName;
-                    var className = GetWindowClassName(hWnd);
+                            string processName = oldDisplayMetrics.ProcessName;
+                            string className = GetWindowClassName(hWnd);
                     IntPtr realHwnd = hWnd;
                     bool isCoreAppWindow = false;
                     if (className.Equals("ApplicationFrameWindow"))
@@ -3396,7 +3360,7 @@ namespace PersistentWindows.Common
 
             bool batchZorderFix = false;
 
-            foreach (var hWnd in sWindows)
+            foreach (IntPtr hWnd in sWindows)
             {
                 if (restoreHalted)
                     break;
@@ -3487,12 +3451,6 @@ namespace PersistentWindows.Common
                 {
                     if (prevDisplayMetrics.IsInvisible && User32.IsWindowVisible(hWnd))
                     {
-                        // #239 IsWindowsMoved() detected difference in screen position
-                        if (hWnd == HotKeyWindow.commanderWnd)
-                        {
-                            User32.ShowWindow(hWnd, (int)ShowWindowCommands.Hide);
-                            continue;
-                        }
                         HideWindow(hWnd);
                         Log.Error("keep invisible window {0}", GetWindowTitle(hWnd));
                         continue;
@@ -3653,7 +3611,7 @@ namespace PersistentWindows.Common
                 {
                     //changeIconText($"restore zorder");
                     IntPtr hWinPosInfo = User32.BeginDeferWindowPos(sWindows.Count<IntPtr>());
-                    foreach (var hWnd in sWindows)
+                    foreach (IntPtr hWnd in sWindows)
                     {
                         if (!User32.IsWindow(hWnd))
                         {
@@ -3710,7 +3668,7 @@ namespace PersistentWindows.Common
             }
 
             // clear topmost
-            foreach (var hWnd in sWindows)
+            foreach (IntPtr hWnd in sWindows)
             {
                 if (restoreHalted)
                     continue;
@@ -3740,13 +3698,13 @@ namespace PersistentWindows.Common
 
             Log.Trace("Restored windows position for display setting {0}", displayKey);
 
-            if (restoringFromDB && restoreTimes == 0 && !autoInitialRestoreFromDB) using (var persistDB = new LiteDatabase(persistDbName))
+            if (restoringFromDB && restoreTimes == 0 && !autoInitialRestoreFromDB) using (LiteDatabase persistDB = new LiteDatabase(persistDbName))
             {
                 HashSet<uint> dbMatchProcess = new HashSet<uint>(); // db entry (process id) matches existing window
-                var db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
+                    ILiteCollection<ApplicationDisplayMetrics> db = persistDB.GetCollection<ApplicationDisplayMetrics>(dbDisplayKey);
 
-                // launch missing process according to db
-                var list = new List<ApplicationDisplayMetrics>(db.FindAll());
+                    // launch missing process according to db
+                    List<ApplicationDisplayMetrics> list = new List<ApplicationDisplayMetrics>(db.FindAll());
                 if (VirtualDesktop.Enabled())
                 {
                     //sort windows by virtual desktop
@@ -3758,9 +3716,9 @@ namespace PersistentWindows.Common
                     });
                 }
 
-                var i = 0; //.bat file id
+                    int i = 0; //.bat file id
                 bool yes_to_all = autoRestoreMissingWindows;
-                foreach (var curDisplayMetrics in list)
+                foreach (ApplicationDisplayMetrics curDisplayMetrics in list)
                 {
                     if (curDisplayMetrics.IsInvisible)
                         continue;
@@ -3778,7 +3736,7 @@ namespace PersistentWindows.Common
 
                     if (!yes_to_all)
                     {
-                        var runProcessDlg = new LaunchProcess(curDisplayMetrics.ProcessName, curDisplayMetrics.Title);
+                            LaunchProcess runProcessDlg = new LaunchProcess(curDisplayMetrics.ProcessName, curDisplayMetrics.Title);
                         runProcessDlg.TopMost = true;
                         runProcessDlg.Icon = icon;
                         if (VirtualDesktop.Enabled() && curDisplayMetrics.Guid != Guid.Empty && curDisplayMetrics.Guid != curVirtualDesktop)
@@ -3798,7 +3756,7 @@ namespace PersistentWindows.Common
                         if (no_to_all)
                             break;
 
-                        var no_set = new HashSet<string>() { "No", "None" };
+                            HashSet<string> no_set = new HashSet<string>() { "No", "None" };
                         if (no_set.Contains(runProcessDlg.buttonName))
                             continue;
 
@@ -3810,7 +3768,7 @@ namespace PersistentWindows.Common
                             try
                             {
                                 string processPath = curDisplayMetrics.ProcessExePath;
-                                foreach (var processName in realProcessFileName.Keys)
+                                foreach (string processName in realProcessFileName.Keys)
                                 {
                                     if (processPath.Contains(processName))
                                     {
@@ -3965,7 +3923,7 @@ namespace PersistentWindows.Common
             }
             else
             {
-                var process = GetProcess(hwnd);
+                Process process = GetProcess(hwnd);
                 if (process == null)
                     return false;
                 try
@@ -4002,7 +3960,7 @@ namespace PersistentWindows.Common
         private List<IntPtr> GetWindows(string procName)
         {
             List<IntPtr> result = new List<IntPtr>();
-            foreach (var hwnd in monitorApplications[curDisplayKey].Keys)
+            foreach (IntPtr hwnd in monitorApplications[curDisplayKey].Keys)
             {
                 string pName = monitorApplications[curDisplayKey][hwnd].Last<ApplicationDisplayMetrics>().ProcessName;
                 if (pName.Equals(procName))
@@ -4067,7 +4025,7 @@ namespace PersistentWindows.Common
 
         public void StopRunningThreads()
         {
-            foreach (var thd in runningThreads)
+            foreach (Thread thd in runningThreads)
             {
                 if (thd.IsAlive)
                     thd.Abort();
@@ -4086,7 +4044,7 @@ namespace PersistentWindows.Common
                 SystemEvents.PowerModeChanged -= powerModeChangedHandler;
                 SystemEvents.SessionSwitch -= sessionSwitchEventHandler;
 
-                foreach (var handle in this.winEventHooks)
+                foreach (IntPtr handle in this.winEventHooks)
                 {
                     User32.UnhookWinEvent(handle);
                 }
