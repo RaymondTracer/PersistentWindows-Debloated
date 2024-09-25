@@ -170,109 +170,10 @@ namespace PersistentWindows.SystrayShell
             altKeyPressed = 0;
 
         }
-
-        //private void TimerEventProcessor(Object myObject, EventArgs myEventArgs)
-        public void UpdateMenuEnable(bool enableRestoreFromDB, bool checkUpgrade)
-        {
-            if (enableRestoreFromDB)
-                restoreToolStripMenuItem.Image = null;
-            else
-                restoreToolStripMenuItem.Image = Properties.Resources.question;
-
-            if (checkUpgrade && enableUpgradeNotice)
-            {
-                if (pauseUpgradeCounter)
-                {
-                    pauseUpgradeCounter = false;
-                }
-                else
-                {
-                    if (skipUpgradeCounter == 0)
-                    {
-                        CheckUpgradeSafe();
-                    }
-
-                    skipUpgradeCounter = (skipUpgradeCounter + 1) % 31;
-                }
-            }
-        }
         
         public void EnableSnapshotRestore(bool enable)
         {
             restoreSnapshotMenuItem.Enabled = enable;
-        }
-
-        private void CheckUpgradeSafe()
-        {
-            try
-            {
-                CheckUpgrade();
-            }
-            catch (Exception ex)
-            {
-                Program.LogError(ex.ToString());
-            }
-        }
-
-        private void CheckUpgrade()
-        {
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            WebClient cli = new WebClient();
-            string data = cli.DownloadString($"{Program.ProjectUrl}/releases");
-
-            string latest_pattern = "releases/latest";
-            int index = data.IndexOf(latest_pattern);
-            index -= 256;
-            data = data.Substring(index, 256);
-            string pattern = "releases/tag/";
-            index = data.IndexOf(pattern);
-            string latestVersion = data.Substring(index + pattern.Length, data.Substring(index + pattern.Length, 6).LastIndexOf('"'));
-
-            string[] latest = latestVersion.Split('.');
-            int latest_major = Int32.Parse(latest[0]);
-            int latest_minor = Int32.Parse(latest[1]);
-
-            string[] current = Application.ProductVersion.Split('.');
-            int current_major = Int32.Parse(current[0]);
-            int current_minor = Int32.Parse(current[1]);
-
-            if (current_major < latest_major
-                || current_major == latest_major && current_minor < latest_minor)
-            {
-                notifyIconMain.ShowBalloonTip(5000, $"{Application.ProductName} {latestVersion} upgrade is available", "The upgrade notice can be disabled in menu", ToolTipIcon.Info);
-                foundUpgrade = true;
-
-                if (!upgradeDownloaded.ContainsKey(latestVersion))
-                {
-                    string src_file = $"{Program.ProjectUrl}/releases/download/{latestVersion}/{System.Windows.Forms.Application.ProductName}{latestVersion}.zip";
-                    string dst_file = $"{Program.AppdataFolder}/upgrade.zip";
-                    string dst_dir = Path.Combine($"{Program.AppdataFolder}", "upgrade");
-                    string install_dir = Application.StartupPath;
-
-                    {
-                        cli.DownloadFile(src_file, dst_file);
-                        if (Directory.Exists(dst_dir))
-                            Directory.Delete(dst_dir, true);
-                        ZipFile.ExtractToDirectory(dst_file, dst_dir);
-                        upgradeDownloaded[latestVersion] = true;
-
-                        string batFile = Path.Combine(Program.AppdataFolder, $"pw_upgrade.bat");
-                        string content = "timeout /t 5 /nobreak > NUL";
-                        content += $"\ncopy /Y \"{dst_dir}\\*.*\" \"{install_dir}\"";
-                        content += "\nstart \"\" /B \"" + Path.Combine(install_dir, Application.ProductName) + ".exe\" " + Program.CmdArgs;
-                        File.WriteAllText(batFile, content);
-
-                        if (autoUpgrade)
-                            Upgrade();
-                        else
-                        {
-                            upgradeNoticeMenuItem.Text = $"Upgrade to {latestVersion}";
-                            notifyIconMain.Icon = Program.UpdateIcon;
-                        }
-                    }
-                }
-            }
         }
 
         private void Exit()
@@ -283,12 +184,6 @@ namespace PersistentWindows.SystrayShell
             //this.notifyIconMain.Icon = null;
             Log.Exit();
             Application.Exit();
-        }
-        private void Upgrade()
-        {
-            string batFile = Path.Combine(Program.AppdataFolder, "pw_upgrade.bat");
-            Process.Start(batFile);
-            Exit();
         }
 
         private void CaptureWindowToDisk(object sender, EventArgs e)
@@ -375,25 +270,6 @@ namespace PersistentWindows.SystrayShell
                         toggleIconMenuItem.Text = "Disable customized icon";
                     }
                 }
-            }
-        }
-
-        private void PauseResumeUpgradeNotice(Object sender, EventArgs e)
-        {
-            if (foundUpgrade)
-            {
-                Upgrade();
-            }
-            else if (enableUpgradeNotice)
-            {
-                enableUpgradeNotice = false;
-                upgradeNoticeMenuItem.Text = "Enable upgrade notice";
-            }
-            else
-            {
-                enableUpgradeNotice = true;
-                upgradeNoticeMenuItem.Text = "Disable upgrade notice";
-                CheckUpgradeSafe();
             }
         }
 

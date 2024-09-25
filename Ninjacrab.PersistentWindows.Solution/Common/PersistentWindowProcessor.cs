@@ -3024,7 +3024,7 @@ namespace PersistentWindows.Common
                 0, 0, 0, UIntPtr.Zero);
             Thread.Sleep(1000); // wait OS finish move
 
-            CenterCursor();
+            //CenterCursor();
 
             return true;
         }
@@ -3127,7 +3127,7 @@ namespace PersistentWindows.Common
                 0, 0, 0, UIntPtr.Zero);
 
             //move mouse to hide resize shape
-            CenterCursor();
+            //CenterCursor();
 
             return true;
         }

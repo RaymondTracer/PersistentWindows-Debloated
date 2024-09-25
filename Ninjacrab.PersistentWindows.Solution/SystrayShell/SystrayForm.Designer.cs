@@ -157,7 +157,6 @@ namespace PersistentWindows.SystrayShell
 
             // pause/resume upgrade notice
             //this.upgradeNoticeMenuItem.Text = "Disable upgrade notice";
-            this.upgradeNoticeMenuItem.Click += new System.EventHandler(this.PauseResumeUpgradeNotice);
 
             // 
             // exitToolStripMenuItem

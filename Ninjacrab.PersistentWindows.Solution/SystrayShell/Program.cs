@@ -453,8 +453,6 @@ namespace PersistentWindows.SystrayShell
                 {
                     EnableRestoreMenu(enableRestoreDB, checkUpgrade);
                 });
-            else
-                systrayForm.UpdateMenuEnable(enableRestoreDB, checkUpgrade);
         }
 
         static void EnableRestoreSnapshotMenu(bool enable)
